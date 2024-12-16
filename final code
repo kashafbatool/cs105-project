@@ -1,0 +1,342 @@
+import json
+import random
+import time
+from blessed import Terminal
+from colorama import Fore, Style
+from colorama import init as colorama_init
+
+from blessed import Terminal
+from pyfiglet import Figlet
+from asciimatics.effects import Cycle, Stars
+from asciimatics.renderers import FigletText
+from asciimatics.scene import Scene
+from asciimatics.screen import Screen
+import time
+
+# Initialize Terminal
+term = Terminal()
+
+# Function to show the welcome menu
+def show_welcome_menu():
+    print(term.clear())
+    print(term.center(Figlet(font='big').renderText('Welcome to Spooky Game!')))
+    print(term.center("Press Enter to continue..."))
+
+# Function to show the options after pressing Enter
+def show_game_options():
+   print(term.clear())
+   print(term.center(Figlet(font='big').renderText('Choose an Option')))
+   print(term.center(("1. Start Game")))
+   print(term.center(("2. Exit")))
+
+# Function to process user's choice
+def process_choice(choice):
+    if choice == '1':
+        return True  # Start the game
+    elif choice == '2':
+        return False  # Exit the game
+    else:
+        return None  # Invalid option
+
+def exit_game():
+    print(term.clear())
+    print(term.center("Goodbye!"))
+    time.sleep(1)
+    raise SystemExit  # This will stop the program and close the terminal
+
+# Main function
+def main():
+    with term.cbreak(), term.hidden_cursor():
+        # Show welcome menu and wait for Enter key
+        show_welcome_menu()
+        
+        inp = term.inkey()
+        
+        if inp != '\n':  # If it's not Enter, do nothing
+            print(term.move_down(2) + term.center("Invalid input. Exiting..."))
+            exit_game()
+        
+        # Show the game options after Enter is pressed
+        show_game_options()
+
+        # Wait for user to press 1 or 2 to start or exit the game
+        inp = term.inkey()
+
+        # Process the user's choice
+        choice = process_choice(inp)
+        
+        if choice is None:
+            print(term.move_down(2) + term.center("Invalid option. Exiting..."))
+            exit_game()
+        
+        if choice:
+            # If user selects "Start", show the starting message and launch the spooky game demo
+            print(term.move_down(2) + term.center("Starting game..."))
+            time.sleep(1)  # Simulate some loading time
+            Screen.wrapper
+        else:
+            # If user selects "Exit", exit the program
+            exit_game()
+
+if __name__ == "__main__":
+    main()
+
+colorama_init(autoreset=True)
+
+# Main function
+def main():
+    with term.cbreak(), term.hidden_cursor():
+        # Show welcome menu and wait for Enter key
+        show_welcome_menu()
+        
+        inp = term.inkey()
+        
+        if inp != '\n':  # If it's not Enter, do nothing
+            print(term.move_down(2) + term.center("Invalid input. Exiting..."))
+            return
+        
+        # Show the game options after Enter is pressed
+        show_game_options()
+
+        # Wait for user to press 1 or 2 to start or exit the game
+        inp = term.inkey()
+
+        # Process the user's choice
+        choice = process_choice(inp)
+        
+        if choice is None:
+            print(term.move_down(2) + term.center("Invalid option. Exiting..."))
+            return
+        
+        if choice:
+            # If user selects "Start", show the starting message and launch the spooky game demo
+            print(term.move_down(2) + term.center("Starting game..."))
+            time.sleep(1)  # Simulate some loading time
+            Screen.wrapper
+        else:
+            # If user selects "Exit", exit the program
+            print(term.move_down(2) + term.center("Exiting... Goodbye!"))
+            time.sleep(1)
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+colorama_init(autoreset=True)
+
+class Game:
+    def __init__(self):
+        self.maps = self.load_all_maps()
+        self.current_map_index = 0
+        self.player_position = (1, 1)  # Starting position
+        self.player_inventory = []
+        self.visited = [[[False for _ in row] for row in game_map] for game_map in self.maps]
+        self.term = Terminal()  # Terminal display
+
+    def load_all_maps(self):
+        return [
+            self.load_map("map1.txt"),
+            self.load_map("map2.txt"),
+            self.load_map("map3.txt")
+        ]
+
+    @staticmethod
+    def load_map(filename):
+        with open(filename, 'r') as file:
+            return [[{'type': char, 'monster': char == 'T'} for char in line.strip()] for line in file.readlines()]
+
+
+    def select_level(self):
+        """Allow the player to choose the starting level."""
+        print("Select a starting level:")
+        print("1. Map 1 (Simple movements)")    
+        print("2. Map 2 (Walls and navigation challenges)")
+        print("3. Map 3 (Battle with a monster)")
+
+        while True:
+            try:
+                choice = int(input("Enter the number of the map you want to start with (1-3): "))
+                if 1 <= choice <= 3:
+                    self.current_map_index = choice - 1
+                    print(f"Starting on Map {choice}!")
+                    break
+                else:
+                    print("Please enter a valid number between 1 and 3.")
+            except ValueError:
+                print("Invalid input. Please enter a number between 1 and 3.")
+
+    def move(self, direction):
+        x, y = self.player_position
+        new_position = {
+            'north': (x - 1, y),
+            'south': (x + 1, y),
+            'east': (x, y + 1),
+            'west': (x, y - 1)
+        }.get(direction, self.player_position)
+
+        nx, ny = new_position
+        if 0 <= nx < len(self.maps[self.current_map_index]) and 0 <= ny < len(self.maps[self.current_map_index][0]):
+            cell = self.maps[self.current_map_index][nx][ny]
+            if cell['monster']:  # Check for a monster
+                print("A monster blocks your path!")
+                simulate_game()
+            elif cell['type'] == '0':  # Walkable path
+                self.player_position = new_position
+                self.visited[self.current_map_index][nx][ny] = True
+                print(f"You moved {direction}.")
+                if self.current_map_index == 0 and (nx, ny) == (5, 5):  # Example chest position
+                    print("You found a chest filled with treasures!")
+            else:
+                print("You hit a wall!")
+        else:
+            print("You can't move outside the map!")
+        self.display_map()
+
+
+
+    def display_map(self):
+        print(f"=== Map {self.current_map_index + 1} ===")
+        for i, row in enumerate(self.maps[self.current_map_index]):
+            for j, cell in enumerate(row):
+                if (i, j) == self.player_position:
+                    print(self.term.red("P"), end=" ")  # Player's position
+                elif self.visited[self.current_map_index][i][j]:
+                    print(self.term.white("."), end=" ")  # Visited path
+                elif cell['type'] == '1':
+                    print(self.term.gray("#"), end=" ")  # Wall
+                else:
+                    print(self.term.green("."), end=" ")  # Path
+            print()
+        print()
+
+    def advance_to_next_map(self):
+        if self.current_map_index < len(self.maps) - 1:
+            self.current_map_index += 1
+            self.player_position = (1, 1)  # Reset player position
+            print("You have entered a new map!")
+        else:
+            print("Congratulations! You've completed the game.")
+
+    def start(self):
+        self.select_level()  # Let the player choose the starting level
+        self.display_map()
+
+        while True:
+            action = input("Move (north, south, east, west) or quit: ").lower()
+            if action == "quit":
+                print("Goodbye!")
+                break
+            elif action in ["north", "south", "east", "west"]:
+                self.move(action)
+            else:
+                print("Invalid input.")
+
+
+
+
+class Character:
+   def __init__(self, name, max_hp, sweet_treats):
+       self.name = name
+       self.max_hp = max_hp
+       self.hp = max_hp
+       self.inventory = {'sweet_treat': sweet_treats}
+
+
+   def attack(self, monster, attack_type="regular"):
+       if attack_type == "sweet_treat" and self.inventory['sweet_treat'] > 0:
+           damage = 25
+           self.inventory['sweet_treat'] -= 1
+           print(f"{self.name} throws a sweet treat! {damage} damage!")
+       elif attack_type == "regular":
+           damage = 25
+           print(f"{self.name} attacks! {damage} damage!")
+       else:
+           print(f"{self.name} has no sweet treats!")
+           return
+       monster.take_damage(damage)
+
+
+   def is_alive(self):
+       return self.hp > 0
+
+
+   def health_bar(self):
+       filled = int(20 * self.hp / self.max_hp)
+       print(f"Health: |{'#' * filled}{'.' * (20 - filled)}| {self.hp}/{self.max_hp} HP")
+
+
+class MiniMonster:
+   def __init__(self, name, max_hp):
+       self.name = name
+       self.hp = max_hp
+
+
+
+
+   def take_damage(self, damage):
+       self.hp -= damage
+       if self.hp < 0:
+           self.hp = 0
+       print(f"{self.name} takes {damage} damage! HP left: {self.hp}")
+
+
+   def is_alive(self):
+       return self.hp > 0
+
+
+
+   def health_bar(self):
+       filled = int(20 * self.hp / 300)
+       print(f"Monster Health: |{'#' * filled}{'.' * (20 - filled)}| {self.hp}/300 HP")
+
+
+
+def simulate_game():
+   character = Character("Player", 100, 3)
+   monster = MiniMonster("Mini Monster", 300)
+
+
+
+
+   while character.is_alive() and monster.is_alive():
+       print("\nWhat will you do?")
+       action = input("(1) Attack (2) Sweet Treat Attack: ").strip()
+
+
+
+
+       if action == "1":
+           character.attack(monster)
+       elif action == "2" and character.inventory['sweet_treat'] > 0:
+           character.attack(monster, "sweet_treat")
+       else:
+           print("Invalid choice!")
+
+
+
+
+       if monster.is_alive():
+           print("The monster attacks back!")
+           character.hp -= 20
+
+
+
+
+       character.health_bar()
+       monster.health_bar()
+
+
+
+
+
+   if not monster.is_alive():
+       print("You defeated the Mini Monster!")
+   if not character.is_alive():
+       print("You were defeated!")
+
+
+if __name__ == '__main__':
+   game = Game()
+   game.start()
